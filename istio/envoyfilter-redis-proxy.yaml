@@ -1,0 +1,30 @@
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: add-redis-proxy
+  namespace: istio-system
+spec:
+  configPatches:
+  - applyTo: NETWORK_FILTER
+    match:
+      listener:
+        name: {REDIS_VIP}_6379 # Replace REDIS_VIP with the cluster IP of "redis-cluster service
+        filterChain:
+          filter:
+            name: "envoy.filters.network.tcp_proxy"
+    patch:
+      operation: REPLACE
+      value:
+        name: envoy.redis_proxy
+        typed_config:
+          "@type": type.googleapis.com/envoy.config.filter.network.redis_proxy.v2.RedisProxy
+          stat_prefix: redis_stats
+          prefix_routes:
+            catch_all_route:
+              cluster: custom-redis-cluster
+          settings:
+            op_timeout: 5s
+            enable_redirection: true
+            enable_command_stats: true
+            read_policy: REPLICA

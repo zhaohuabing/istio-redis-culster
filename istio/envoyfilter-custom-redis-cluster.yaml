@@ -1,0 +1,58 @@
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: custom-redis-cluster
+  namespace: istio-system
+spec:
+  configPatches:
+  - applyTo: CLUSTER
+    patch:
+      operation: INSERT_FIRST
+      value:
+        name: "custom-redis-cluster"
+        connect_timeout: 0.5s
+        lb_policy: CLUSTER_PROVIDED
+        load_assignment:
+          cluster_name: custom-redis-cluster
+          endpoints:
+          - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: redis-cluster-0.redis-cluster.redis.svc.cluster.local
+                    port_value: 6379
+            - endpoint:
+                address:
+                  socket_address:
+                    address: redis-cluster-1.redis-cluster.redis.svc.cluster.local
+                    port_value: 6379
+            - endpoint:
+                address:
+                  socket_address:
+                    address: redis-cluster-2.redis-cluster.redis.svc.cluster.local 
+                    port_value: 6379
+            - endpoint:
+                address:
+                  socket_address:
+                    address: redis-cluster-3.redis-cluster.redis.svc.cluster.local
+                    port_value: 6379
+            - endpoint:
+                address:
+                  socket_address:
+                    address: redis-cluster-4.redis-cluster.redis.svc.cluster.local
+                    port_value: 6379
+            - endpoint:
+                address:
+                  socket_address:
+                    address: redis-cluster-5.redis-cluster.redis.svc.cluster.local
+                    port_value: 6379
+        cluster_type:
+          name: envoy.clusters.redis
+          typed_config:
+            "@type": type.googleapis.com/google.protobuf.Struct
+            value:
+              cluster_refresh_rate: 5s
+              cluster_refresh_timeout: 3s
+              redirect_refresh_interval: 5s
+              redirect_refresh_threshold: 5

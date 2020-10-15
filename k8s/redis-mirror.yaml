@@ -1,0 +1,40 @@
+---
+apiVersion: apps/v1 
+kind: Deployment
+metadata:
+  name: redis-mirror
+  labels:
+    app: redis-mirror
+spec:
+  selector:
+    matchLabels:
+      app: redis-mirror
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: redis-mirror
+    spec:
+      containers:
+      - name: redis-mirror
+        image: redis
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        ports:
+        - containerPort: 6379
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-mirror
+spec:
+  selector:
+    app: redis-mirror
+  ports:
+  - name: tcp  # istio will treat it as a normal tcp service since the prefix is tcp
+    port: 6379
+    protocol: TCP
+    targetPort: 6379
