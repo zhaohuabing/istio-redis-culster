@@ -129,10 +129,11 @@ cluster_stats_messages_received:416
 ```
 
 ## Some useful Redis commands
-redis-cli --scan  Getting a list of keys 
-redis-cli monitor   
-redis-cli cluster info
-redis-cli cluster nodes
+
+* redis-cli --scan  Getting a list of keys
+* redis-cli monitor
+* redis-cli cluster info
+* redis-cli cluster nodes
 
 # Use Istio to enable Envoy Redis Cluster support
 
