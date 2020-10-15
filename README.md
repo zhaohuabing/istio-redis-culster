@@ -6,16 +6,16 @@ If you're using a newer Istio version where the following PR has already been in
 
 Implement REPLACE operation for EnvoyFilter patch  https://github.com/istio/istio/pull/27426/
 
-At the time of writing, the latest Istio version is 1.7.3, in which the EnvoyFilter REPLACE operation is not supported yet, so I build a customized pilot image to enable it. We need to use this image zhaohuabing/pilot:1.7.3-enable-ef-replace instead of the default one to make this demo work.
+At the time of writing, the latest Istio version is 1.7.3, in which the EnvoyFilter REPLACE operation is not supported yet, so I build a customized pilot image to enable it. We need to use zhaohuabing/pilot:1.7.3-enable-ef-replace instead of the default pilot image to make this demo work.
 
 ```bash
-$ cd cd istio-1.7.3/bin
+$ cd istio-1.7.3/bin
 $ ./istioctl install --set components.pilot.hub=zhaohuabing --set components.pilot.tag=1.7.3-enable-ef-replace
 ```
 
 # Deploy Redis Cluster
 
-We will install the demo in the 'redis' namespace, please create one first if you don't have this namespace in your cluster.
+We will install the demo in the 'redis' namespace, please create one if you don't have this namespace in your cluster.
 
 ```bash
 $ kubectl create ns redis
@@ -46,7 +46,7 @@ redis-cluster-4   2/2     Running   0          2m27s
 redis-cluster-5   2/2     Running   0          117s
 ```
 
-## Create a Redis Cluster
+## Create the Redis Cluster
 
 ```bash
 $ kubectl exec -it redis-cluster-0 -n redis -- redis-cli --cluster create --cluster-replicas 1 $(kubectl get pods -l app=redis-cluster -o jsonpath='{range.items[*]}{.status.podIP}:6379 ' -n redis)
