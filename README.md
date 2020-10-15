@@ -351,4 +351,4 @@ From the output of these comands, we can see that all the 'set' commands have al
 
 * https://rancher.com/blog/2019/deploying-redis-cluster
 * https://medium.com/@fr33m0nk/migrating-to-redis-cluster-using-envoy-93a87ae79dc3
-* (Implement REPLACE operation for EnvoyFilter patch)[https://github.com/istio/istio/pull/27426/]
+* [Implement REPLACE operation for EnvoyFilter patch](https://github.com/istio/istio/pull/27426/)
