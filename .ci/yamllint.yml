@@ -9,4 +9,4 @@ rules:
   truthy: disable
   # 80 chars should be enough, but don't fail if a line is longer
   line-length: disable
-  indentation: {spaces: 2, indent-sequences: false}
+  indentation: {spaces: 2, indent-sequences: whatever}
