@@ -2,8 +2,8 @@
 extends: default
 
 yaml-files:
-  - '*.yaml'
-  - '*.yml'
+- '*.yaml'
+- '*.yml'
 
 rules:
   truthy: disable
