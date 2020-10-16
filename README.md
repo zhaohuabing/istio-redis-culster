@@ -49,9 +49,7 @@ redis-cluster-5   2/2     Running   0          117s
 ## Create the Redis Cluster
 
 ```bash
-$ kubectl exec -it redis-cluster-0 -n redis -- redis-cli --cluster create --cluster-replicas 1 $(kubectl get pods -l app=redis-cluster -o jsonpath='{range.items[*]}{.status.podIP}:6379 ' -n redis)
-Defaulting container name to redis.
-Use 'kubectl describe pod/redis-cluster-0 -n redis' to see all of the containers in this pod.
+$ kubectl exec -it redis-cluster-0 -c redis -n redis -- redis-cli --cluster create --cluster-replicas 1 $(kubectl get pods -l app=redis-cluster -o jsonpath='{range.items[*]}{.status.podIP}:6379 ' -n redis)
 >>> Performing hash slots allocation on 6 nodes...
 Master[0] -> Slots 0 - 5460
 Master[1] -> Slots 5461 - 10922
@@ -107,9 +105,7 @@ S: e293d25881c3cf6db86034cd9c26a1af29bc585a 172.16.0.72:6379
 Check the cluster details and the role of each member.
 
 ```bash
-$ kubectl exec -it redis-cluster-0 -n redis -- redis-cli cluster info 
-Defaulting container name to redis.
-Use 'kubectl describe pod/redis-cluster-0 -n redis' to see all of the containers in this pod.
+$ kubectl exec -it redis-cluster-0 -c redis -n redis -- redis-cli cluster info 
 cluster_state:ok
 cluster_slots_assigned:16384
 cluster_slots_ok:16384
@@ -185,9 +181,7 @@ Please note that the exact topology of the Redis Cluster and key distribution am
 Send some requests with different keys to the Rdeis Cluster:
 
 ```bash
-$ kubectl exec -it `kubectl get pod -l app=redis-client -n redis -o jsonpath="{.items[0].metadata.name}"` -n redis -- redis-cli -h redis-cluster
-Defaulting container name to redis-client.
-Use 'kubectl describe pod/redis-client-56f767d9d9-n22m9 -n redis' to see all of the containers in this pod.
+$ kubectl exec -it `kubectl get pod -l app=redis-client -n redis -o jsonpath="{.items[0].metadata.name}"` -c redis-client -n redis -- redis-cli -h redis-cluster
 redis-cluster:6379> set a a
 OK
 redis-cluster:6379> set b b
