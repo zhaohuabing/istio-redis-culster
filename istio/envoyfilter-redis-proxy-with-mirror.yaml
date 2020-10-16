@@ -9,7 +9,7 @@ spec:
   - applyTo: NETWORK_FILTER
     match:
       listener:
-        name: {REDIS_VIP}_6379 # Replace REDIS_VIP with the cluster IP of "redis-cluster service
+        name: ${REDIS_VIP}_6379             # Replace REDIS_VIP with the cluster IP of "redis-cluster service
         filterChain:
           filter:
             name: "envoy.filters.network.tcp_proxy"
@@ -24,7 +24,7 @@ spec:
             catch_all_route:
               request_mirror_policy:
               - cluster: outbound|6379||redis-mirror.redis.svc.cluster.local
-                exclude_read_commands: True # Mirror write commands only:
+                exclude_read_commands: True     # Mirror write commands only:
               cluster: custom-redis-cluster
           settings:
             op_timeout: 5s

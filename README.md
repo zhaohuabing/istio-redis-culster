@@ -156,7 +156,7 @@ customresourcedefinition.apiextensions.k8s.io/envoyfilters.networking.istio.io c
 ## Apply the EnvoyFilter to replace the default tcp proxy with our redis proxy
 
 ```bash
-$ sed -i .bak "s/{REDIS_VIP}/`kubectl get svc redis-cluster -n redis -o=jsonpath='{.spec.clusterIP}'`/" istio/envoyfilter-redis-proxy.yaml
+$ sed -i .bak "s/\${REDIS_VIP}/`kubectl get svc redis-cluster -n redis -o=jsonpath='{.spec.clusterIP}'`/" istio/envoyfilter-redis-proxy.yaml
 $ kubectl apply -f istio/envoyfilter-redis-proxy.yaml
 envoyfilter.networking.istio.io/add-redis-proxy created
 ```
@@ -297,7 +297,7 @@ service/redis-mirror created
 Apply the envofilter to enable traffic mirroring at the Envoy proxy.
 
 ```bash
-$ sed -i .bak "s/{REDIS_VIP}/`kubectl get svc redis-cluster -n redis -o=jsonpath='{.spec.clusterIP}'`/" istio/envoyfilter-redis-proxy-with-mirror.yaml
+$ sed -i .bak "s/\${REDIS_VIP}/`kubectl get svc redis-cluster -n redis -o=jsonpath='{.spec.clusterIP}'`/" istio/envoyfilter-redis-proxy-with-mirror.yaml
 $ kubectl apply -f istio/envoyfilter-redis-proxy-with-mirror.yaml
 envoyfilter.networking.istio.io/add-redis-proxy configured
 ```

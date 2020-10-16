@@ -30,7 +30,7 @@ spec:
             - endpoint:
                 address:
                   socket_address:
-                    address: redis-cluster-2.redis-cluster.redis.svc.cluster.local 
+                    address: redis-cluster-2.redis-cluster.redis.svc.cluster.local
                     port_value: 6379
             - endpoint:
                 address:

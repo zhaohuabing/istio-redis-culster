@@ -16,9 +16,9 @@ spec:
         app: redis-client
     spec:
       containers:
-      - name: redis-client
-        image: redis
-        resources:
-          requests:
-            cpu: 100m
-            memory: 100Mi
+        - name: redis-client
+          image: redis
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
