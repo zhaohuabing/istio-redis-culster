@@ -222,7 +222,7 @@ g
 c
 ```
 
-Shard[2], in which the master is redis-cluster-12 and the slave is redis-cluster-3
+Shard[2], in which the master is redis-cluster-2 and the slave is redis-cluster-3
 ```bash
 $ kubectl exec redis-cluster-2 -c redis -n redis -- redis-cli --scan
 a
@@ -242,7 +242,7 @@ We can see that the keys have been distributed to the three shards in the Redis 
 
 We have set the read policy to 'REPLICA' in the EnvoyFilter, which means all the 'get' requests should only be sent to the slave node. Let's check it:
 
-Use the following commands to verify the traffic mirroing policy:
+Use the following commands to verify the read policy:
 
 Client:
 
@@ -340,6 +340,109 @@ $ kubectl exec -it `kubectl get pod -l app=redis-mirror -n redis -o jsonpath="{.
 ```
 From the output of these comands, we can see that all the 'set' commands have also been sent to the mirror node.
 ![](img/redis-cluster-mirror-policy.png)
+
+# Under the hood
+
+We create two EnvoyFilter resources in the Istio, which modify the original configuration of the Envoy sidecar to enable Redis Cluster support.
+
+This EnvoyFilter replaces the TCP Proxy Network Filter in the listener with a Network Filter of "type.googleapis.com/envoy.config.filter.network.redis_proxy.v2.RedisProxy" type, in which we have a catch-all route pointed to 'custom-redis-cluster' and also have read policy and mirror policy configured.
+
+```yaml
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: add-redis-proxy
+  namespace: istio-system
+spec:
+  configPatches:
+  - applyTo: NETWORK_FILTER
+    match:
+      listener:
+        name: ${REDIS_VIP}_6379             # Replace REDIS_VIP with the cluster IP of "redis-cluster service
+        filterChain:
+          filter:
+            name: "envoy.filters.network.tcp_proxy"
+    patch:
+      operation: REPLACE
+      value:
+        name: envoy.redis_proxy
+        typed_config:
+          "@type": type.googleapis.com/envoy.config.filter.network.redis_proxy.v2.RedisProxy
+          stat_prefix: redis_stats
+          prefix_routes:
+            catch_all_route:
+              request_mirror_policy:            # Send requests to the mirror cluster
+              - cluster: outbound|6379||redis-mirror.redis.svc.cluster.local
+                exclude_read_commands: True     # Mirror write commands only:
+              cluster: custom-redis-cluster
+          settings:
+            op_timeout: 5s
+            enable_redirection: true
+            enable_command_stats: true
+            read_policy: REPLICA               # Send read requests to replica
+   ```
+
+This EnvoyFilter create a custom Cluster of "envoy.clusters.redis" type, which queries a random node in the Redis cluster with [CLUSTER SLOTS command](https://redis.io/commands/cluster-slots) to get the topology of the cluster, and store the topology locally so Envoy knows how to route the client requests to the correct Redis node.
+
+```yaml
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: custom-redis-cluster
+  namespace: istio-system
+spec:
+  configPatches:
+  - applyTo: CLUSTER
+    patch:
+      operation: INSERT_FIRST
+      value:
+        name: "custom-redis-cluster"
+        connect_timeout: 0.5s
+        lb_policy: CLUSTER_PROVIDED
+        load_assignment:
+          cluster_name: custom-redis-cluster
+          endpoints:
+          - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: redis-cluster-0.redis-cluster.redis.svc.cluster.local
+                    port_value: 6379
+            - endpoint:
+                address:
+                  socket_address:
+                    address: redis-cluster-1.redis-cluster.redis.svc.cluster.local
+                    port_value: 6379
+            - endpoint:
+                address:
+                  socket_address:
+                    address: redis-cluster-2.redis-cluster.redis.svc.cluster.local
+                    port_value: 6379
+            - endpoint:
+                address:
+                  socket_address:
+                    address: redis-cluster-3.redis-cluster.redis.svc.cluster.local
+                    port_value: 6379
+            - endpoint:
+                address:
+                  socket_address:
+                    address: redis-cluster-4.redis-cluster.redis.svc.cluster.local
+                    port_value: 6379
+            - endpoint:
+                address:
+                  socket_address:
+                    address: redis-cluster-5.redis-cluster.redis.svc.cluster.local
+                    port_value: 6379
+        cluster_type:
+          name: envoy.clusters.redis
+          typed_config:
+            "@type": type.googleapis.com/google.protobuf.Struct
+            value:
+              cluster_refresh_rate: 5s
+              cluster_refresh_timeout: 3s
+              redirect_refresh_interval: 5s
+              redirect_refresh_threshold: 5
+   ```
 
 # References
 
