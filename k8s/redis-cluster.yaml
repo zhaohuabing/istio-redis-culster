@@ -39,9 +39,9 @@ spec:
         image: redis:6.0.8-alpine
         ports:
         - containerPort: 6379
-          name: client
+          name: tcp-client
         - containerPort: 16379
-          name: gossip
+          name: tcp-gossip
         command: ["/conf/update-node.sh", "redis-server", "/conf/redis.conf", "--cluster-announce-ip $(POD_IP)"]
         env:
         - name: POD_IP
@@ -52,22 +52,11 @@ spec:
         - name: conf
           mountPath: /conf
           readOnly: false
-        - name: data
-          mountPath: /data
-          readOnly: false
       volumes:
       - name: conf
         configMap:
           name: redis-cluster
           defaultMode: 0755
-  volumeClaimTemplates:
-  - metadata:
-      name: data
-    spec:
-      accessModes: ["ReadWriteOnce"]
-      resources:
-        requests:
-          storage: 1Gi
 
 ---
 apiVersion: v1
@@ -79,9 +68,9 @@ spec:
   ports:
   - port: 6379
     targetPort: 6379
-    name: client
+    name: tcp-client
   - port: 16379
     targetPort: 16379
-    name: gossip
+    name: tcp-gossip
   selector:
     app: redis-cluster
