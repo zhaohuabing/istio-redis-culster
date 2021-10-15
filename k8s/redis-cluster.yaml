@@ -57,7 +57,23 @@ spec:
         configMap:
           name: redis-cluster
           defaultMode: 0755
-
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-cluster-headless
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - port: 6379
+    targetPort: 6379
+    name: tcp-client
+  - port: 16379
+    targetPort: 16379
+    name: tcp-gossip
+  selector:
+    app: redis-cluster
 ---
 apiVersion: v1
 kind: Service
