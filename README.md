@@ -20,6 +20,8 @@ We will install the demo in the 'redis' namespace, please create one if you don'
 ```bash
 $ kubectl create ns redis
 namespace/redis created
+$ kubectl label ns redis istio-injection=enabled
+namespace/redis labeled
 ```
 
 Deploy the statefulset and configmap.
@@ -49,7 +51,7 @@ redis-cluster-5   2/2     Running   0          117s
 ## Create the Redis Cluster
 
 ```bash
-$ kubectl exec -it redis-cluster-0 -c redis -n redis -- redis-cli --cluster create --cluster-replicas 1 $(kubectl get pods -l app=redis-cluster -o jsonpath='{range.items[*]}{.status.podIP}:6379 ' -n redis)
+$ kubectl exec -it redis-cluster-0 -c redis -n redis -- redis-cli --cluster create --cluster-replicas 1 $(kubectl get pod -n redis -o json | jq -r '.items[] | .status.podIP + ":6379"')
 >>> Performing hash slots allocation on 6 nodes...
 Master[0] -> Slots 0 - 5460
 Master[1] -> Slots 5461 - 10922
@@ -143,6 +145,8 @@ envoyfilter.networking.istio.io/custom-redis-cluster created
 ```
 
 ## Update EnvoyFilter CRD to enable REPLACE operation
+
+>note: This step can be skipped if https://github.com/istio/istio/pull/27426/ has already been merged into that Istio release.
 
 ```bash
 $ kubectl apply -f istio/envoyfilter-crd.yaml 
@@ -345,7 +349,7 @@ From the output of these comands, we can see that all the 'set' commands have al
 
 We create two EnvoyFilter resources in the Istio, which modify the original configuration of the Envoy sidecar to enable Redis Cluster support.
 
-This EnvoyFilter replaces the TCP Proxy Network Filter in the listener with a Network Filter of "type.googleapis.com/envoy.config.filter.network.redis_proxy.v2.RedisProxy" type, in which we have a catch-all route pointed to 'custom-redis-cluster' and also have read policy and mirror policy configured.
+This EnvoyFilter replaces the TCP Proxy Network Filter in the listener with a Network Filter of "type.googleapis.com/envoy.extensions.filters.network.redis_proxy.v3.RedisProxy" type, in which we have a catch-all route pointed to 'custom-redis-cluster' and also have read policy and mirror policy configured.
 
 ```yaml
 apiVersion: networking.istio.io/v1alpha3
@@ -367,7 +371,7 @@ spec:
       value:
         name: envoy.redis_proxy
         typed_config:
-          "@type": type.googleapis.com/envoy.config.filter.network.redis_proxy.v2.RedisProxy
+          "@type": type.googleapis.com/envoy.extensions.filters.network.redis_proxy.v3.RedisProxy
           stat_prefix: redis_stats
           prefix_routes:
             catch_all_route:

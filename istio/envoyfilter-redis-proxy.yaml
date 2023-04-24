@@ -18,7 +18,7 @@ spec:
       value:
         name: envoy.redis_proxy
         typed_config:
-          "@type": type.googleapis.com/envoy.config.filter.network.redis_proxy.v2.RedisProxy
+          "@type": type.googleapis.com/envoy.extensions.filters.network.redis_proxy.v3.RedisProxy
           stat_prefix: redis_stats
           prefix_routes:
             catch_all_route:
